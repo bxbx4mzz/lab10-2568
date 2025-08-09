@@ -1,11 +1,20 @@
 import { UserCard } from "../components/UserCard";
 import { cleanUser } from "../libs/CleanUser";
+import type { CardUserProps } from "../libs/CardUserType";
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 export default function RandomUserPage() {
-  const [users, setUsers] = useState("");
+  const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [genAmount, setGenAmount] = useState(1);
+
+  useEffect(() => {
+    const strGenAmount = localStorage.getItem("genAmount");
+    if (strGenAmount === null) {
+      return;
+    }
+    setGenAmount(Number(strGenAmount));
+  }, []);
 
   const generateBtnOnClick = async () => {
     setIsLoading(true);
@@ -17,6 +26,13 @@ export default function RandomUserPage() {
     //Your code here
     //Process result from api response with map function. Tips use function from /src/libs/CleanUser
     //Then update state with function : setUsers(...)
+    const cleanUsers = users.map((users: CardUserProps) => cleanUser(users));
+    setUsers(cleanUsers);
+  };
+
+  const handleChange = (event: any) => {
+    setGenAmount(event.target.value);
+    localStorage.setItem("genAmount", event.target.value);
   };
 
   return (
@@ -28,7 +44,7 @@ export default function RandomUserPage() {
           className="form-control text-center"
           style={{ maxWidth: "100px" }}
           type="number"
-          onChange={(event: any) => setGenAmount(event.target.value)}
+          onChange={handleChange}
           value={genAmount}
         />
         <button className="btn btn-dark" onClick={generateBtnOnClick}>
@@ -38,7 +54,17 @@ export default function RandomUserPage() {
       {isLoading && (
         <p className="display-6 text-center fst-italic my-4">Loading ...</p>
       )}
-      {users && !isLoading && users.map(/*code map rendering UserCard here */)}
+      {users &&
+        !isLoading &&
+        users.map((user: CardUserProps) => (
+          <UserCard
+            name={user.name}
+            email={user.email}
+            imgUrl={user.imgUrl}
+            address={user.address}
+            key={user.email}
+          />
+        ))}
     </div>
   );
 }
